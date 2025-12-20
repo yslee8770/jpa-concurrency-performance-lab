@@ -2,8 +2,8 @@ package com.example.jpa_concurrency_performance_lab.product.update;
 
 import com.example.jpa_concurrency_performance_lab.domain.product.Product;
 import com.example.jpa_concurrency_performance_lab.repository.ProductRepository;
-import com.example.jpa_concurrency_performance_lab.service.product.stragtegy.JdbcBatchStrategy;
-import com.example.jpa_concurrency_performance_lab.support.TestDataSeeder;
+import com.example.jpa_concurrency_performance_lab.service.product.strategy.JdbcBatchStrategy;
+import com.example.jpa_concurrency_performance_lab.setup.UpdateDataSeeder;
 import com.example.jpa_concurrency_performance_lab.util.QueryCountUtil;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JdbcBatchUpdateTest {
 
     @Autowired
-    TestDataSeeder seeder;
+    UpdateDataSeeder seeder;
     @Autowired
     JdbcBatchStrategy jdbcBatch;
     @Autowired

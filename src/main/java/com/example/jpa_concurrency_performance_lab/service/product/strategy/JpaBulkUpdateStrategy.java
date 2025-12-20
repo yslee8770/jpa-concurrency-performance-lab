@@ -1,4 +1,4 @@
-package com.example.jpa_concurrency_performance_lab.service.product.stragtegy;
+package com.example.jpa_concurrency_performance_lab.service.product.strategy;
 
 import com.example.jpa_concurrency_performance_lab.dto.UpdateRange;
 import com.example.jpa_concurrency_performance_lab.repository.ProductRepository;

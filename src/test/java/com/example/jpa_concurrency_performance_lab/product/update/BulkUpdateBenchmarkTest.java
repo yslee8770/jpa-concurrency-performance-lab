@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import com.example.jpa_concurrency_performance_lab.support.TestDataSeeder;
+import com.example.jpa_concurrency_performance_lab.setup.UpdateDataSeeder;
 import com.example.jpa_concurrency_performance_lab.config.TestJpaAuditingConfig;
 import com.example.jpa_concurrency_performance_lab.dto.BenchmarkResult;
 import com.example.jpa_concurrency_performance_lab.dto.UpdateRange;
-import com.example.jpa_concurrency_performance_lab.service.product.stragtegy.UpdateBenchmarkRunner;
+import com.example.jpa_concurrency_performance_lab.service.product.strategy.UpdateBenchmarkRunner;
 import com.example.jpa_concurrency_performance_lab.util.QueryCountUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +22,8 @@ import org.springframework.test.context.ActiveProfiles;
 @Import(TestJpaAuditingConfig.class)
 class BulkUpdateBenchmarkTest {
 
-    @Autowired TestDataSeeder seeder;
+    @Autowired
+    UpdateDataSeeder seeder;
     @Autowired
     UpdateBenchmarkRunner runner;
 

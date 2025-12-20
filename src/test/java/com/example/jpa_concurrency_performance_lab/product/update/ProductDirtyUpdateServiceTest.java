@@ -1,12 +1,11 @@
 package com.example.jpa_concurrency_performance_lab.product.update;
 
-import com.example.jpa_concurrency_performance_lab.config.TestJpaAuditingConfig;
 import com.example.jpa_concurrency_performance_lab.domain.product.Product;
 import com.example.jpa_concurrency_performance_lab.domain.product.ProductStatus;
 import com.example.jpa_concurrency_performance_lab.repository.ProductRepository;
 import com.example.jpa_concurrency_performance_lab.service.product.ProductBulkUpdateService;
 import com.example.jpa_concurrency_performance_lab.service.product.ProductDirtyUpdateService;
-import com.example.jpa_concurrency_performance_lab.support.TestDataSeeder;
+import com.example.jpa_concurrency_performance_lab.setup.UpdateDataSeeder;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EnableJpaAuditing
 class BulkUpdateAuditingTest {
 
-    @Autowired TestDataSeeder seeder;
+    @Autowired
+    UpdateDataSeeder seeder;
     @Autowired ProductRepository productRepository;
     @Autowired ProductBulkUpdateService bulkService;
     @Autowired ProductDirtyUpdateService dirtyService;

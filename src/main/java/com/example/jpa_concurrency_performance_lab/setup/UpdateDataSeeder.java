@@ -1,4 +1,4 @@
-package com.example.jpa_concurrency_performance_lab.support;
+package com.example.jpa_concurrency_performance_lab.setup;
 
 import com.example.jpa_concurrency_performance_lab.domain.product.Product;
 import com.example.jpa_concurrency_performance_lab.repository.ProductRepository;
@@ -12,7 +12,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class TestDataSeeder {
+public class UpdateDataSeeder {
 
     private final JdbcTemplate jdbcTemplate;
     private final ProductRepository productRepository;

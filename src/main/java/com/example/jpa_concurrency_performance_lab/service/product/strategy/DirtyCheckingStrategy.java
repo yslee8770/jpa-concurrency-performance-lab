@@ -1,4 +1,4 @@
-package com.example.jpa_concurrency_performance_lab.service.product.stragtegy;
+package com.example.jpa_concurrency_performance_lab.service.product.strategy;
 
 import java.util.List;
 
