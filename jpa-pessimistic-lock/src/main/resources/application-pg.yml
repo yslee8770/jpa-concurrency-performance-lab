@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: 1234
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 20
+      auto-commit: false

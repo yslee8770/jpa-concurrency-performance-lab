@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: jpa-pessimistic-lock
+
+  sql:
+    init:
+      mode: never
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+        generate_statistics: false
+
+logging:
+  level:
+    org.hibernate.SQL: warn
+    org.hibernate.orm.jdbc.bind: off
+    org.hibernate.stat: off
+    org.hibernate.engine.internal.ActionQueue: off
