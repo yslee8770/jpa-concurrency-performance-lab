@@ -1,4 +1,4 @@
-package test;
+package test.optimistic;
 
 import com.example.OptimisticLockTestApplication;
 import com.example.domain.DecreaseResult;

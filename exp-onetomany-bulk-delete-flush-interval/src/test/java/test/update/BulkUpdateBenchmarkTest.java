@@ -1,4 +1,4 @@
-package test;
+package test.update;
 
 import java.util.List;
 import com.example.UpdateLabApplication;

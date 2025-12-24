@@ -1,4 +1,4 @@
-package test;
+package test.onetomany;
 
 import com.example.OneToManyLabApplication;
 import com.example.doamin.PurchaseOrder;

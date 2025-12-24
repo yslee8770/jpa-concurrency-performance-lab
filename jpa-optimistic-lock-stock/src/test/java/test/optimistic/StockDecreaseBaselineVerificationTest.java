@@ -1,15 +1,14 @@
-package test;
+package test.optimistic;
 
 import com.example.OptimisticLockTestApplication;
-import com.example.domain.DecreaseResult;
-import com.example.domain.DecreaseResultCode;
 import com.example.domain.Stock;
+import com.example.domain.exception.OutOfStockException;
 import com.example.repository.StockRepository;
 import com.example.service.StockDecreaseService;
-import com.example.service.retry.RetryPolicy;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.OptimisticLockingFailureException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = OptimisticLockTestApplication.class)
-class StockDecreaseWithRetryVerificationTest {
+class StockDecreaseBaselineVerificationTest {
 
     @Autowired
     StockRepository stockRepository;
@@ -27,26 +26,21 @@ class StockDecreaseWithRetryVerificationTest {
     StockDecreaseService stockDecreaseService;
 
     @Test
-    void stock_1_concurrent_100_with_retry_should_converge() throws Exception {
+    void stock_1_concurrent_100_without_retry_baseline() throws Exception {
         // given
         Stock stock = stockRepository.save(Stock.of(1));
         long stockId = stock.getId();
 
         int requests = 100;
-        ExecutorService pool = Executors.newFixedThreadPool(requests);
 
+        ExecutorService pool = Executors.newFixedThreadPool(requests);
         CountDownLatch ready = new CountDownLatch(requests);
         CountDownLatch start = new CountDownLatch(1);
         CountDownLatch done = new CountDownLatch(requests);
 
         AtomicLong success = new AtomicLong();
         AtomicLong outOfStock = new AtomicLong();
-        AtomicLong optimisticMax = new AtomicLong();
-
-        AtomicLong totalAttempts = new AtomicLong();
-        AtomicLong totalConflicts = new AtomicLong();
-
-        RetryPolicy policy = new RetryPolicy(30, 0, 0); // 검증용: backoff 없이(빠르게)
+        AtomicLong optimisticFail = new AtomicLong();
 
         long t0 = System.nanoTime();
 
@@ -57,17 +51,17 @@ class StockDecreaseWithRetryVerificationTest {
                 try {
                     start.await();
 
-                    DecreaseResult r = stockDecreaseService.decreaseWithRetry(stockId, 1, policy);
+                    stockDecreaseService.decreaseOnceWithoutRetry(stockId, 1);
+                    success.incrementAndGet();
 
-                    totalAttempts.addAndGet(r.attempts());
-                    totalConflicts.addAndGet(r.optimisticConflicts());
+                } catch (OptimisticLockingFailureException e) {
+                    optimisticFail.incrementAndGet();
 
-                    if (r.code() == DecreaseResultCode.SUCCESS) success.incrementAndGet();
-                    else if (r.code() == DecreaseResultCode.OUT_OF_STOCK) outOfStock.incrementAndGet();
-                    else if (r.code() == DecreaseResultCode.OPTIMISTIC_CONFLICT_MAX_ATTEMPTS) optimisticMax.incrementAndGet();
-                    else throw new IllegalStateException("Unexpected result: " + r.code()); // 기타 금지
+                } catch (OutOfStockException e) {
+                    outOfStock.incrementAndGet();
+
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new RuntimeException("Unexpected exception", e);
                 } finally {
                     done.countDown();
                 }
@@ -87,19 +81,17 @@ class StockDecreaseWithRetryVerificationTest {
         Stock reloaded = stockRepository.findById(stockId).orElseThrow();
         assertThat(reloaded.getQuantity()).isEqualTo(0);
 
+        // 낙관적 락 때문에 성공은 1개로 고정되는 게 정상
         assertThat(success.get()).isEqualTo(1);
-        assertThat(outOfStock.get()).isEqualTo(99);
-        // 정책에 따라 0이 아닐 수도 있으니, 일단 관측용
-        // assertThat(optimisticMax.get()).isEqualTo(0);
+        // baseline의 핵심: 충돌이 밖으로 튀는 걸 "숫자"로 남긴다
+        assertThat(optimisticFail.get()).isGreaterThan(0);
 
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(t1 - t0);
-        System.out.println("=== VERIFY(with retry) ===");
+
+        System.out.println("=== BASELINE(without retry) ===");
         System.out.println("SUCCESS=" + success.get());
         System.out.println("OUT_OF_STOCK=" + outOfStock.get());
-        System.out.println("OPTIMISTIC_CONFLICT_MAX_ATTEMPTS=" + optimisticMax.get());
+        System.out.println("OPTIMISTIC_FAILURE=" + optimisticFail.get());
         System.out.println("elapsedMs=" + elapsedMs);
-        System.out.println("totalAttempts=" + totalAttempts.get());
-        System.out.println("totalConflicts=" + totalConflicts.get());
-        System.out.println("avgAttempts=" + (totalAttempts.get() / (double) requests));
     }
 }

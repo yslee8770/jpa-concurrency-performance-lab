@@ -1,4 +1,4 @@
-package test;
+package test.fetch;
 
 import com.example.FetchStrategyLabApplication;
 import com.example.fixture.TestDataFactory;
@@ -7,17 +7,18 @@ import com.example.support.HibernateStats;
 import com.example.support.PerfResult;
 import support.PerfTestSupport;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@ActiveProfiles("batch")
+@Tag("oom")
+@ActiveProfiles("fetchjoin")
 @SpringBootTest(classes = FetchStrategyLabApplication.class)
-class BatchFetchAlternativeTest extends PerfTestSupport {
+class JoinDepthMemoryPressureTest extends PerfTestSupport {
 
     @Autowired
     private TestDataFactory factory;
@@ -29,19 +30,17 @@ class BatchFetchAlternativeTest extends PerfTestSupport {
 
     @BeforeEach
     void seed() {
-        factory.seed(5000, 20, 3, 5);
+        factory.seed(2000, 100, 10, 5); // depth로 압박 크게
     }
 
-    @Transactional
     @Test
-    void to_one_fetch_join_plus_batch_fetching_should_replace_row_explosion() {
-        List<Long> ids = repo.findOrderIds(0, 200);
+    void deep_fetch_graph_should_increase_heap_pressure() {
+        List<Long> ids = repo.findOrderIds(0, 50);
 
-        PerfResult r = measure("toOneFetchJoin + batchFetch(lazy collections)", stats, () -> {
-            var orders = repo.fetchToOneByIds(ids);
-
+        PerfResult r = measure("deepFetch(lines+options+payments)", stats, () -> {
+            var orders = repo.fetchDeepGraphByIds(ids);
             orders.forEach(o -> {
-                o.getOrderLines().size();
+                o.getOrderLines().forEach(l -> l.getOptions().size());
                 o.getPayments().size();
             });
         });

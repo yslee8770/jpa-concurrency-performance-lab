@@ -1,4 +1,4 @@
-package test;
+package test.update;
 
 import com.example.UpdateLabApplication;
 import com.example.domain.Product;

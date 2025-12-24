@@ -1,4 +1,4 @@
-package test;
+package test.fetch;
 
 import com.example.FetchStrategyLabApplication;
 import com.example.fixture.TestDataFactory;

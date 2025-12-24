@@ -1,4 +1,4 @@
-package test;
+package test.optimistic;
 
 import com.example.OptimisticLockTestApplication;
 import com.example.domain.DecreaseResult;
@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(classes = OptimisticLockTestApplication.class)
-class StockDecreaseIntentionalOptMaxTest {
+class StockDecreaseWithRetryVerificationTest {
 
     @Autowired
     StockRepository stockRepository;
@@ -27,25 +27,26 @@ class StockDecreaseIntentionalOptMaxTest {
     StockDecreaseService stockDecreaseService;
 
     @Test
-    void should_produce_opt_max_when_retry_policy_is_too_weak() throws Exception {
+    void stock_1_concurrent_100_with_retry_should_converge() throws Exception {
         // given
-        long initialQty = 10;
-        int requests = 100;
-
-        Stock stock = stockRepository.save(Stock.of(initialQty));
+        Stock stock = stockRepository.save(Stock.of(1));
         long stockId = stock.getId();
 
-        // 의도적으로 약한 정책: 충돌 나면 거의 바로 포기하게 만든다
-        RetryPolicy weakPolicy = new RetryPolicy(1, 0, 0); // maxAttempts=1 (retry 사실상 없음)
-
+        int requests = 100;
         ExecutorService pool = Executors.newFixedThreadPool(requests);
+
         CountDownLatch ready = new CountDownLatch(requests);
         CountDownLatch start = new CountDownLatch(1);
         CountDownLatch done = new CountDownLatch(requests);
 
         AtomicLong success = new AtomicLong();
         AtomicLong outOfStock = new AtomicLong();
-        AtomicLong optMax = new AtomicLong();
+        AtomicLong optimisticMax = new AtomicLong();
+
+        AtomicLong totalAttempts = new AtomicLong();
+        AtomicLong totalConflicts = new AtomicLong();
+
+        RetryPolicy policy = new RetryPolicy(30, 0, 0); // 검증용: backoff 없이(빠르게)
 
         long t0 = System.nanoTime();
 
@@ -56,15 +57,16 @@ class StockDecreaseIntentionalOptMaxTest {
                 try {
                     start.await();
 
-                    DecreaseResult r = stockDecreaseService.decreaseWithRetry(stockId, 1, weakPolicy);
+                    DecreaseResult r = stockDecreaseService.decreaseWithRetry(stockId, 1, policy);
+
+                    totalAttempts.addAndGet(r.attempts());
+                    totalConflicts.addAndGet(r.optimisticConflicts());
 
                     if (r.code() == DecreaseResultCode.SUCCESS) success.incrementAndGet();
                     else if (r.code() == DecreaseResultCode.OUT_OF_STOCK) outOfStock.incrementAndGet();
-                    else if (r.code() == DecreaseResultCode.OPTIMISTIC_CONFLICT_MAX_ATTEMPTS) optMax.incrementAndGet();
-                    else throw new IllegalStateException("Unexpected result: " + r.code());
-
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    else if (r.code() == DecreaseResultCode.OPTIMISTIC_CONFLICT_MAX_ATTEMPTS) optimisticMax.incrementAndGet();
+                    else throw new IllegalStateException("Unexpected result: " + r.code()); // 기타 금지
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 } finally {
                     done.countDown();
@@ -82,28 +84,22 @@ class StockDecreaseIntentionalOptMaxTest {
         pool.shutdown();
 
         // then
-        long elapsedMs = TimeUnit.NANOSECONDS.toMillis(t1 - t0);
-
         Stock reloaded = stockRepository.findById(stockId).orElseThrow();
-        long remaining = reloaded.getQuantity();
+        assertThat(reloaded.getQuantity()).isEqualTo(0);
 
-        System.out.println("=== STEP5(intentional OPT_MAX) ===");
+        assertThat(success.get()).isEqualTo(1);
+        assertThat(outOfStock.get()).isEqualTo(99);
+        // 정책에 따라 0이 아닐 수도 있으니, 일단 관측용
+        // assertThat(optimisticMax.get()).isEqualTo(0);
+
+        long elapsedMs = TimeUnit.NANOSECONDS.toMillis(t1 - t0);
+        System.out.println("=== VERIFY(with retry) ===");
         System.out.println("SUCCESS=" + success.get());
         System.out.println("OUT_OF_STOCK=" + outOfStock.get());
-        System.out.println("OPTIMISTIC_CONFLICT_MAX_ATTEMPTS=" + optMax.get());
+        System.out.println("OPTIMISTIC_CONFLICT_MAX_ATTEMPTS=" + optimisticMax.get());
         System.out.println("elapsedMs=" + elapsedMs);
-        System.out.println("remainingQty=" + remaining);
-
-        //  “3종 결과로만 수렴” 검증
-        assertThat(success.get() + outOfStock.get() + optMax.get()).isEqualTo(requests);
-
-        //  이 테스트의 핵심: 약한 정책이면 OPT_MAX가 실제로 발생해야 한다
-        assertThat(optMax.get()).isGreaterThan(0);
-
-        //  성공 수와 실제 재고 감소량이 일치해야 한다
-        assertThat(initialQty - remaining).isEqualTo(success.get());
-
-        // 재고는 0~initialQty 범위
-        assertThat(remaining).isBetween(0L, initialQty);
+        System.out.println("totalAttempts=" + totalAttempts.get());
+        System.out.println("totalConflicts=" + totalConflicts.get());
+        System.out.println("avgAttempts=" + (totalAttempts.get() / (double) requests));
     }
 }
