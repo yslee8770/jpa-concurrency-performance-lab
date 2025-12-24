@@ -30,9 +30,6 @@ public class Stock extends BaseEntity {
     @Column(nullable = false)
     private int quantity;
 
-    @Version
-    private long version; // 앱이 임의 수정 금지 :contentReference[oaicite:2]{index=2}
-
     @Builder
     private Stock(Product product, int quantity) {
         this.product = product;
