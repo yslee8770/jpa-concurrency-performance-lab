@@ -7,11 +7,13 @@ import com.example.dto.UpdateRange;
 import com.example.setup.TestDataSeeder;
 import com.example.strategy.UpdateBenchmarkRunner;
 import com.example.util.QueryCountUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+@Slf4j
 @SpringBootTest(classes = UpdateLabApplication.class)
 class BulkUpdateBenchmarkTest {
 
@@ -36,7 +38,7 @@ class BulkUpdateBenchmarkTest {
 
         List<BenchmarkResult> results = runner.run(new UpdateRange(from, to, newPrice), resetPrice);
         for (BenchmarkResult r : results) {
-            System.out.printf("%s | %dms | %s%n",
+            log.info("{} | {}ms | {}",
                     r.strategy(),
                     r.elapsedMs(),
                     QueryCountUtil.format(r.statementCount())

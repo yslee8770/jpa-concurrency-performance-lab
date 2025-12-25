@@ -4,6 +4,7 @@ import com.example.PessimisticLockTestApplication;
 import com.example.domain.Seat;
 import com.example.repository.SeatRepository;
 import com.example.support.*;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Slf4j
 @SpringBootTest(classes = PessimisticLockTestApplication.class)
 @ActiveProfiles("mysql")
 class MySqlDeadlockRetryConvergesTest {
@@ -85,7 +87,7 @@ class MySqlDeadlockRetryConvergesTest {
         assertThat(completed.get()).isEqualTo(2);
         assertThat(maxAttempt.get()).isLessThanOrEqualTo(7);
 
-        System.out.println("totalAttempts=" + totalAttempts.get() + ", maxAttempt=" + maxAttempt.get());
+        log.info("totalAttempts={}, maxAttempt={}", totalAttempts.get(), maxAttempt.get());
     }
 
     private static void await(CyclicBarrier gate) {

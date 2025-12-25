@@ -7,6 +7,7 @@ import com.example.domain.Stock;
 import com.example.repository.StockRepository;
 import com.example.service.StockDecreaseService;
 import com.example.service.retry.RetryPolicy;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Slf4j
 @SpringBootTest(classes = OptimisticLockTestApplication.class)
 class StockDecreaseWithRetryVerificationTest {
 
@@ -93,13 +95,13 @@ class StockDecreaseWithRetryVerificationTest {
         // assertThat(optimisticMax.get()).isEqualTo(0);
 
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(t1 - t0);
-        System.out.println("=== VERIFY(with retry) ===");
-        System.out.println("SUCCESS=" + success.get());
-        System.out.println("OUT_OF_STOCK=" + outOfStock.get());
-        System.out.println("OPTIMISTIC_CONFLICT_MAX_ATTEMPTS=" + optimisticMax.get());
-        System.out.println("elapsedMs=" + elapsedMs);
-        System.out.println("totalAttempts=" + totalAttempts.get());
-        System.out.println("totalConflicts=" + totalConflicts.get());
-        System.out.println("avgAttempts=" + (totalAttempts.get() / (double) requests));
+        log.info("=== VERIFY(with retry) ===");
+        log.info("SUCCESS={}", success.get());
+        log.info("OUT_OF_STOCK={}", outOfStock.get());
+        log.info("OPTIMISTIC_CONFLICT_MAX_ATTEMPTS={}", optimisticMax.get());
+        log.info("elapsedMs={}", elapsedMs);
+        log.info("totalAttempts={}", totalAttempts.get());
+        log.info("totalConflicts={}", totalConflicts.get());
+        log.info("avgAttempts={}", totalAttempts.get() / (double) requests);
     }
 }

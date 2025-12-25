@@ -5,6 +5,7 @@ import com.example.domain.Stock;
 import com.example.domain.exception.OutOfStockException;
 import com.example.repository.StockRepository;
 import com.example.service.StockDecreaseService;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Slf4j
 @SpringBootTest(classes = OptimisticLockTestApplication.class)
 class StockDecreaseBaselineVerificationTest {
 
@@ -88,10 +90,10 @@ class StockDecreaseBaselineVerificationTest {
 
         long elapsedMs = TimeUnit.NANOSECONDS.toMillis(t1 - t0);
 
-        System.out.println("=== BASELINE(without retry) ===");
-        System.out.println("SUCCESS=" + success.get());
-        System.out.println("OUT_OF_STOCK=" + outOfStock.get());
-        System.out.println("OPTIMISTIC_FAILURE=" + optimisticFail.get());
-        System.out.println("elapsedMs=" + elapsedMs);
+        log.info("=== BASELINE(without retry) ===");
+        log.info("SUCCESS={}", success.get());
+        log.info("OUT_OF_STOCK={}", outOfStock.get());
+        log.info("OPTIMISTIC_FAILURE={}", optimisticFail.get());
+        log.info("elapsedMs={}", elapsedMs);
     }
 }

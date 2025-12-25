@@ -7,6 +7,7 @@ import com.example.setup.UpdateDataSeeder;
 import com.example.strategy.JdbcBatchStrategy;
 import com.example.util.QueryCountUtil;
 import jakarta.persistence.EntityManager;
+import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Slf4j
 @SpringBootTest(classes = UpdateLabApplication.class)
 public class JdbcBatchUpdateTest {
 
@@ -46,7 +48,7 @@ public class JdbcBatchUpdateTest {
 
         long elapsedMs = (System.nanoTime() - start) / 1_000_000;
 
-        System.out.printf("JDBC_BATCH_PARTIAL | %dms | %s%n",
+        log.info("JDBC_BATCH_PARTIAL | {}ms | {}",
                 elapsedMs,
                 QueryCountUtil.format(QueryCountUtil.snapshot())
         );

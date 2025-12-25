@@ -5,12 +5,14 @@ import com.example.support.HibernateStats;
 import com.example.support.MemoryMeter;
 import com.example.support.PerfResult;
 import com.example.support.PerfResultWriters;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public abstract class PerfTestSupport {
 
     private static final List<PerfResult> RESULTS = new ArrayList<>();
@@ -39,10 +41,14 @@ public abstract class PerfTestSupport {
 
     protected void recordAndPrint(PerfResult r) {
         RESULTS.add(r);
-        System.out.printf(
-                "%s | %dms | heapΔ=%d | queries=%d | entityLoad=%d | collFetch=%d%n",
-                r.label(), r.elapsedMs(), r.heapDeltaBytes(),
-                r.queryCount(), r.entityLoadCount(), r.collectionFetchCount()
+        log.info(
+                "{} | {}ms | heapΔ={} | queries={} | entityLoad={} | collFetch={}",
+                r.label(),
+                r.elapsedMs(),
+                r.heapDeltaBytes(),
+                r.queryCount(),
+                r.entityLoadCount(),
+                r.collectionFetchCount()
         );
     }
 

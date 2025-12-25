@@ -7,6 +7,7 @@ import com.example.domain.Stock;
 import com.example.repository.StockRepository;
 import com.example.service.StockDecreaseService;
 import com.example.service.retry.RetryPolicy;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
+@Slf4j
 @SpringBootTest(classes = OptimisticLockTestApplication.class)
 class StockDecreasePolicyTuningTest {
 
@@ -89,11 +91,10 @@ class StockDecreasePolicyTuningTest {
 
             long elapsedMs = TimeUnit.NANOSECONDS.toMillis(t1 - t0);
 
-            System.out.println("=== " + name + " ===");
-            System.out.println("SUCCESS=" + success.get() + ", OUT_OF_STOCK=" + outOfStock.get() + ", OPT_MAX=" + optimisticMax.get());
-            System.out.println("elapsedMs=" + elapsedMs + ", totalAttempts=" + totalAttempts.get() + ", totalConflicts=" + totalConflicts.get()
-                    + ", avgAttempts=" + (totalAttempts.get() / (double) requests));
-            System.out.println();
+            log.info("=== {} ===", name);
+            log.info("SUCCESS={}, OUT_OF_STOCK={}, OPT_MAX={}", success.get(), outOfStock.get(), optimisticMax.get());
+            log.info("elapsedMs={}, totalAttempts={}, totalConflicts={}, avgAttempts={}", elapsedMs, totalAttempts.get(), totalConflicts.get(), totalAttempts.get() / (double) requests);
+            log.info("\n");
         }
     }
 }

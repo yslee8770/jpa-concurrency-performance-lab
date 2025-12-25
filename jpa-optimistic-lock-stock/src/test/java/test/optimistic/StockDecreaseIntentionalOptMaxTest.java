@@ -7,6 +7,7 @@ import com.example.domain.Stock;
 import com.example.repository.StockRepository;
 import com.example.service.StockDecreaseService;
 import com.example.service.retry.RetryPolicy;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Slf4j
 @SpringBootTest(classes = OptimisticLockTestApplication.class)
 class StockDecreaseIntentionalOptMaxTest {
 
@@ -87,12 +89,12 @@ class StockDecreaseIntentionalOptMaxTest {
         Stock reloaded = stockRepository.findById(stockId).orElseThrow();
         long remaining = reloaded.getQuantity();
 
-        System.out.println("=== STEP5(intentional OPT_MAX) ===");
-        System.out.println("SUCCESS=" + success.get());
-        System.out.println("OUT_OF_STOCK=" + outOfStock.get());
-        System.out.println("OPTIMISTIC_CONFLICT_MAX_ATTEMPTS=" + optMax.get());
-        System.out.println("elapsedMs=" + elapsedMs);
-        System.out.println("remainingQty=" + remaining);
+        log.info("=== STEP5(intentional OPT_MAX) ===");
+        log.info("SUCCESS={}", success.get());
+        log.info("OUT_OF_STOCK={}", outOfStock.get());
+        log.info("OPTIMISTIC_CONFLICT_MAX_ATTEMPTS={}", optMax.get());
+        log.info("elapsedMs={}", elapsedMs);
+        log.info("remainingQty={}", remaining);
 
         //  “3종 결과로만 수렴” 검증
         assertThat(success.get() + outOfStock.get() + optMax.get()).isEqualTo(requests);
